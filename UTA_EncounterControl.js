@@ -98,15 +98,12 @@
  *     初版。
  */
 //=============================================================================
+/**
+ * @namespace
+ */
+var utakata = utakata || {};
 
-//name space
-var utakata = utakata || (utakata = {});
-
-(function(utakata){
-    var EncounterControl = (function(){
-        //constructor
-        function EncounterControl(){
-            this.progressValue = 0;
+(function(utakata) {
             this.remainingStepCnt = 0;
             this.endCallback = null;
 
@@ -187,10 +184,9 @@ var utakata = utakata || (utakata = {});
     })();
 
     utakata.EncounterControl = new EncounterControl();
-}(utakata || (utakata = { }) ));
 
-
-(function(){
+    //-----------------------------------------------------------------------------
+    // Game_Interpreter
     //-----------------------------------------------------------------------------
     // parse and dispatch plugin command
     var _Game_Interpreter_pluginCommand = Game_Interpreter.prototype.pluginCommand;
@@ -222,13 +218,4 @@ var utakata = utakata || (utakata = {});
         return value;
     };
 
-    var _Game_Player_updateNonmoving = 
-            Game_Player.prototype.updateNonmoving;
-    Game_Player.prototype.updateNonmoving = function(wasMoving){
-        _Game_Player_updateNonmoving.call(this, wasMoving);
-        if(wasMoving && utakata.EncounterControl.isEnabled()){
-            utakata.EncounterControl.updateRemainingStepCount();
-        }
-    };
-
-})();
+})(utakata);
