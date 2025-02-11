@@ -193,21 +193,19 @@ var utakata = utakata || (utakata = {});
 (function(){
     //-----------------------------------------------------------------------------
     // parse and dispatch plugin command
-    //-----------------------------------------------------------------------------
-    var _Game_Interpreter_pluginCommand = 
-            Game_Interpreter.prototype.pluginCommand;
-    Game_Interpreter.prototype.pluginCommand = function(command, args){
+    var _Game_Interpreter_pluginCommand = Game_Interpreter.prototype.pluginCommand;
+    Game_Interpreter.prototype.pluginCommand = function(command, args) {
         _Game_Interpreter_pluginCommand.call(this, command, args);
-        if(command === 'EncounterControl'){
-            switch(args[0]){
-                case 'set':
-                    utakata.EncounterControl.setParameter(args);
-                    break;
-                case 'clear':
-                    utakata.EncounterControl.clearParameter();
-                    break;
-                default:
-                    break;
+        if (command === "EncounterControl") {
+            switch (args[0]) {
+            case "set":
+                utakata.EncounterControl.setParameter(args);
+                break;
+            case "clear":
+                utakata.EncounterControl.clearParameter();
+                break;
+            default:
+                break;
             }
         }
     };
@@ -215,11 +213,10 @@ var utakata = utakata || (utakata = {});
     //-----------------------------------------------------------------------------
     // Game_Player
     //-----------------------------------------------------------------------------
-    var _Game_Player_encounterProgressValue = 
-            Game_Player.prototype.encounterProgressValue;
-    Game_Player.prototype.encounterProgressValue = function(){
+    var _Game_Player_encounterProgressValue = Game_Player.prototype.encounterProgressValue;
+    Game_Player.prototype.encounterProgressValue = function() {
         var value = _Game_Player_encounterProgressValue.call(this);
-        if(utakata.EncounterControl.isEnabled()){
+        if (utakata.EncounterControl.isEnabled()) {
             value *= utakata.EncounterControl.getProgressValue();
         }
         return value;
