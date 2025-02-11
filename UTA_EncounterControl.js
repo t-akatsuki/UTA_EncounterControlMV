@@ -156,8 +156,11 @@ var utakata = utakata || {};
             this.endCallback = null;
         };
 
-        EncounterControl.prototype.updateRemainingStepCount = function(){
-            if(this.remainingStepCnt > 0){
+        /**
+         * 残り効果歩数の更新。
+         * @memberof EncounterControl
+         * @method
+         */
                 this.remainingStepCnt--;
                 //this._tr("updateRemainingStepCount: " + this.remainingStepCnt);
                 if(this.remainingStepCnt == 0){
@@ -170,15 +173,33 @@ var utakata = utakata || {};
             }
         };
 
-        EncounterControl.prototype.isEnabled = function(){
+        /**
+         * エンカウント補正中かどうかを取得する。
+         * @memberof EncounterControl
+         * @method
+         * @return {boolean} エンカウント補正中の場合はtrue。
+         */
+        EncounterControl.prototype.isEnabled = function() {
             return this.remainingStepCnt != 0;
         };
 
-        EncounterControl.prototype.getProgressValue = function(){
+        /**
+         * エンカウント補正率を取得する。
+         * @memberof EncounterControl
+         * @method
+         * @return {number} エンカウント補正率。
+         */
+        EncounterControl.prototype.getProgressValue = function() {
             return this.progressValue;
         };
 
-        EncounterControl.prototype.getRemainingStepCount = function(){
+        /**
+         * 残り効果歩数を取得する。
+         * @memberof EncounterControl
+         * @method
+         * @return {number} 残り効果歩数。
+         */
+        EncounterControl.prototype.getRemainingStepCount = function() {
             return this.remainingStepCnt;
         };
 
