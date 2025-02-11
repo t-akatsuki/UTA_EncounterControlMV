@@ -299,7 +299,6 @@ var utakata = utakata || {};
 
         return EncounterControl;
     })();
-
     utakata.EncounterControl = new EncounterControl();
 
     //-----------------------------------------------------------------------------
