@@ -157,7 +157,35 @@ var utakata = utakata || {};
             };
 
             this.clearParameter();
+        };
+
+        /**
+         * エンカウント補正パラメーターの設定。
+         * @memberof EncounterControl
+         * @method
+         * @param {string[]} args プラグインコマンドの引数。
+         *                   args[0] : プラグインコマンド名
+         *                   args[1] : エンカウント補正率
+         *                   args[2] : 効果歩数
+         *                   args[3] : 効果終了時のコールバックコモンイベントID (省略可)
+         */
+        EncounterControl.prototype.setParameter = function(args) {
+            // 引数の数が不正な場合はエラーとする
+            if (args.length < 3) {
+                throw new Error("utakata.EncounterControl: Plugin command arguments are invalid.");
+            }
+
+            // エンカウント補正倍率
             var progress = parseFloat(args[1]);
+            if (progress !== progress) {
+                throw new Error("utakata.EncounterControl: Plugin command argument progress is invalid.");
+            }
+            // 効果歩数
+            var step = parseInt(args[2], 10);
+            if (step !== step) {
+                throw new Error("utakata.EncounterControl: Plugin command argument step is invalid.");
+            }
+
             // コールバックコモンイベントID(省略可)
             var endCallbackCommonEventId = null;
             if (args.length >= 4) {
