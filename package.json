@@ -1,0 +1,27 @@
+{
+  "name": "uta_encountercontrolmv",
+  "version": "1.1.0",
+  "description": "エンカウント率の制御を任意のタイミングで行う事ができます。",
+  "author": "t-akatsuki",
+  "license": "MIT",
+  "private": true,
+  "homepage": "https://www.utakata-no-yume.net",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/t-akatsuki/UTA_EncounterControlMV"
+  },
+  "bugs": {
+    "email": "support@utakata-no-yume.net",
+    "url": "https://github.com/t-akatsuki/UTA_EncounterControlMV/issues"
+  },
+  "scripts": {
+    "lint:js": "eslint UTA_EncounterControl.js",
+    "format:js": "eslint --fix UTA_EncounterControl.js"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.15.0",
+    "@stylistic/eslint-plugin-js": "2.11.0",
+    "eslint": "9.15.0",
+    "globals": "15.12.0"
+  }
+}
