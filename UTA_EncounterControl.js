@@ -106,8 +106,30 @@
 var utakata = utakata || {};
 
 (function(utakata) {
+    /**
+     * @class EncounterControl
+     * @classdesc エンカウント制御を管理する静的クラス。
+     */
+    var EncounterControl = (function() {
+        /**
+         * @constructor
+         */
+        function EncounterControl() {
+            /**
+             * エンカウント率の倍率。
+             * @type {number}
+             */
+            this.progressValue = 1.0;
+            /**
+             * 効果の残り歩数。
+             * @type {number}
+             */
             this.remainingStepCnt = 0;
-            this.endCallback = null;
+            /**
+             * コールバック時に呼ばれるコモンイベントID。
+             * @type {number|null}
+             */
+            this._callbackCommonEventId = null;
 
             this._showTrace = false;
             this._tr = null;
@@ -136,12 +158,40 @@ var utakata = utakata || {};
 
             this.clearParameter();
             var progress = parseFloat(args[1]);
-            var step     = parseInt(args[2]);
+            // コールバックコモンイベントID(省略可)
+            var endCallbackCommonEventId = null;
+            if (args.length >= 4) {
+                endCallbackCommonEventId = parseInt(args[3], 10);
+                if (endCallbackCommonEventId !== endCallbackCommonEventId) {
+                    throw new Error("utakata.EncounterControl: Plugin command argument callback is invalid.");
+                }
+            }
 
-            var endCallback = args[3] ? parseInt(args[3]) : null;
-
-            this._setParameterCore(progress, step, endCallback);
+            this._setParameterCore(progress, step, endCallbackCommonEventId);
             return true;
+        };
+
+        /**
+         * @memberof EncounterControl
+         * @private
+         * @method
+         * @param {number} progress エンカウント補正倍率
+         * @param {number} step 効果歩数。
+         * @param {number|null} endCallbackCommonEventId コールバックコモンイベントID。
+         *                                               nullの場合はコールバックは呼ばれない。
+         */
+        EncounterControl.prototype._setParameterCore = function(progress, step, endCallbackCommonEventId) {
+            if (endCallbackCommonEventId === undefined) {
+                endCallbackCommonEventId = null;
+            }
+
+            this._tr("setParameter: progress = " + progress + ", step = " + step + ", callbackCommonEventId = " + endCallbackCommonEventId);
+
+            // エンカウント補正率は小数点2桁までの精度とする
+            this.progressValue = Math.floor(progress * 100) / 100;
+            this.remainingStepCnt = Math.floor(step);
+
+            this._callbackCommonEventId = endCallbackCommonEventId;
         };
 
         /**
@@ -153,7 +203,20 @@ var utakata = utakata || {};
             this._tr("clearParameter");
             this.progressValue = 1.0;
             this.remainingStepCnt = 0;
-            this.endCallback = null;
+            this._callbackCommonEventId = null;
+        };
+
+        /**
+         * エンカウント補正終了時のコールバックを呼び出す。
+         * @memberof EncounterControl
+         * @private
+         * @method
+         */
+        EncounterControl.prototype._callEndCallback = function() {
+            if (!this._callbackCommonEventId) {
+                return;
+            }
+            $gameTemp.reserveCommonEvent(this._callbackCommonEventId);
         };
 
         /**
@@ -161,13 +224,16 @@ var utakata = utakata || {};
          * @memberof EncounterControl
          * @method
          */
+        EncounterControl.prototype.updateRemainingStepCount = function() {
+            if (this.remainingStepCnt > 0) {
                 this.remainingStepCnt--;
-                //this._tr("updateRemainingStepCount: " + this.remainingStepCnt);
-                if(this.remainingStepCnt == 0){
-                    //call back common event
-                    if(typeof this.endCallback === "function"){
-                        this.endCallback();
-                    }
+
+                // 効果終了時の処理
+                if (this.remainingStepCnt == 0) {
+                    // コールバックの呼び出し
+                    this._callEndCallback();
+
+                    // パラメータのクリア
                     this.clearParameter();
                 }
             }
