@@ -113,9 +113,17 @@ var utakata = utakata || (utakata = {});
             this._showTrace = false;
             this._tr = null;
 
-            this.initialize();
+            this._initialize();
         }
 
+        /**
+         * 初期化処理。
+         * @memberof EncounterControl
+         * @private
+         * @method
+         */
+        EncounterControl.prototype._initialize = function() {
+            var parameters = PluginManager.parameters("UTA_EncounterControl");
 
             this._showTrace = (String(parameters["Show Trace"]) === "true");
 
@@ -127,18 +135,7 @@ var utakata = utakata || (utakata = {});
                 console.log(logStr);
             };
 
-            this.progressValue = 1.0;
-            this.remainingStepCnt = 0;
-            this.endCallback = null;
-        };
-
-        EncounterControl.prototype.setParameter = function(args){
-            //parse
-            if(args.length < 3){
-                this._tr("setParameter: args is invalid.");
-                return false;
-            }
-
+            this.clearParameter();
             var progress = parseFloat(args[1]);
             var step     = parseInt(args[2]);
 
@@ -148,25 +145,12 @@ var utakata = utakata || (utakata = {});
             return true;
         };
 
-        EncounterControl.prototype._setParameterCore = function(progress, step, endCallback){
-            this._tr("setParameter: progress = " + progress + ", step = " + step);
-
-            var progressValue = Math.floor(progress * 100) / 100;
-            var stepValue     = Math.floor(step);
-
-            this.progressValue = progressValue;
-            this.remainingStepCnt = stepValue;
-
-            if(!endCallback){ return; }
-            if(typeof endCallback === "string"){ endCallback = parseInt(endCallback); }
-            this.setEndCallback(endCallback);
-        };
-
-        EncounterControl.prototype.setEndCallback = function(cmnEvId){
-            this.endCallback = function(){ $gameTemp.reserveCommonEvent(cmnEvId); }
-        };
-
-        EncounterControl.prototype.clearParameter = function(){
+        /**
+         * エンカウント補正パラメーターをクリアし初期状態に戻す。
+         * @memberof EncounterControl
+         * @method
+         */
+        EncounterControl.prototype.clearParameter = function() {
             this._tr("clearParameter");
             this.progressValue = 1.0;
             this.remainingStepCnt = 0;
