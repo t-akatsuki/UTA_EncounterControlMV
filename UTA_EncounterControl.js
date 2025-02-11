@@ -209,6 +209,22 @@ var utakata = utakata || {};
     };
 
     //-----------------------------------------------------------------------------
+    // Game_Party
+    //-----------------------------------------------------------------------------
+    /**
+     * v1.1.0
+     * 他プラグインにてGame_player.prototype.updateなどの破壊的変更がある場合に動作しない事がある模様
+     * これに対応する為、Game_playerへのフックを廃止し、Game_Partyへのフックに変更する
+     */
+    var _Game_Party_increaseSteps = Game_Party.prototype.increaseSteps;
+    Game_Party.prototype.increaseSteps = function() {
+        _Game_Party_increaseSteps.call(this);
+        if (!$gameMap.isEventRunning() && utakata.EncounterControl.isEnabled()) {
+            utakata.EncounterControl.updateRemainingStepCount();
+        }
+    };
+
+    //-----------------------------------------------------------------------------
     // Game_Player
     //-----------------------------------------------------------------------------
     var _Game_Player_encounterProgressValue = Game_Player.prototype.encounterProgressValue;
