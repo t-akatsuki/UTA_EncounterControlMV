@@ -110,16 +110,22 @@ var utakata = utakata || (utakata = {});
             this.remainingStepCnt = 0;
             this.endCallback = null;
 
+            this._showTrace = false;
             this._tr = null;
 
             this.initialize();
         }
 
-        //member methods
-        EncounterControl.prototype.initialize = function(){
-            var parameters = PluginManager.parameters('UTA_EncounterControl');
-            var _show_tr = (String(parameters['Show Trace']) === "true");
-            this._tr = _show_tr ? function(s){ var str = "EncounterControl: " + s; console.log(str); } : function(s){ };
+
+            this._showTrace = (String(parameters["Show Trace"]) === "true");
+
+            this._tr = function(s) {
+                if (!this._showTrace) {
+                    return;
+                }
+                var logStr = "EncounterControl: " + s;
+                console.log(logStr);
+            };
 
             this.progressValue = 1.0;
             this.remainingStepCnt = 0;
