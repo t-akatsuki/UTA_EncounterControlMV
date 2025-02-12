@@ -345,6 +345,7 @@ var utakata = utakata || {};
          * @return {object} セーブデータに格納するデータ連想配列。
          */
         EncounterControl.prototype.appendSaveContents = function(contents) {
+            // セーブ・ロード効果維持しない場合は何もしない
             if (!utakata.EncounterControl.isRemainSaveAndLoad()) {
                 return;
             }
@@ -366,6 +367,10 @@ var utakata = utakata || {};
          * @param {object} contents セーブデータから読み込んだデータ。
          */
         EncounterControl.prototype.extractSaveContents = function(contents) {
+            // ロード時に意図せず効果が残留しないように一旦状態を初期化
+            this.clearParameter();
+
+            // セーブ・ロード効果維持しない場合は何もしない
             if (!this._remainSaveAndLoad) {
                 return;
             }
@@ -507,6 +512,14 @@ var utakata = utakata || {};
     DataManager.extractSaveContents = function(contents) {
         _DataManager_extractSaveContents.call(this, contents);
         utakata.EncounterControl.extractSaveContents(contents);
+    };
+
+    // ニューゲーム時にエンカウント制御のデータを初期化する
+    var DataManager_setupNewGame = DataManager.setupNewGame;
+    DataManager.setupNewGame = function() {
+        DataManager_setupNewGame.call(this);
+
+        utakata.EncounterControl.clearParameter();
     };
 
 })(utakata);
