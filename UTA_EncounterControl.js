@@ -1,7 +1,7 @@
 //=============================================================================
 // UTA_EncounterControl.js
 //=============================================================================
-// Version    : 1.00
+// Version    : 1.1.0
 // LastUpdate : 2016.02.17
 // Author     : T.Akatsuki
 // Website    : http://utakata-no-yume.net/
@@ -19,6 +19,13 @@
  * true  : Show trace., false : Don't show trace.
  * @default false
  * 
+ * @param Remain Save and Load
+ * @desc Set state of remain effect at save and load.
+ * @type boolean
+ * @on Enabled
+ * @off Disabled
+ * @default false
+ * 
  * @help # Overview
  * When you run this plugin command canbe done to control encounter at any time.
  * For example, encounter rate can be set to half between 100 steps.
@@ -28,6 +35,10 @@
  * # Parameters
  *   Show Trace [true|false]
  *     Set whether the issue a trace for debugging.
+ * 
+ *   Remain Save and Load [true|false]
+ *     Set state of remain effect at save and load.
+ *     If you set to true, store state of encounter control on savedata, and restore it when load.
  * 
  * # Plugin Command
  *   EncounterControl set [magnification] [steps] [callback]
@@ -64,6 +75,13 @@
  * true: トレースを表示, false: トレースを表示しない
  * @default false
  * 
+ * @param Remain Save and Load
+ * @desc セーブ・ロード時に効果を維持するかを設定します。
+ * @type boolean
+ * @on 効果を維持する
+ * @off 効果を維持しない
+ * @default false
+ * 
  * @help ■概要
  * EncounterControlプラグインを利用するにはプラグインコマンドから実行します。
  * プラグインコマンドを実行するとエンカウント歩数の制御を任意のタイミングで行えます。
@@ -74,6 +92,10 @@
  * ■パラメータの説明
  *   Show Trace [true|false]
  *     デバッグ用のトレースを出すかを設定します。
+ * 
+ *   Remain Save and Load [true|false]
+ *     セーブ・ロード時に効果を維持するかを設定します。
+ *     trueに設定するとセーブデータにエンカウント制御の状態を保存し、ロード時に復元します。
  * 
  * ■プラグインコマンド
  *   EncounterControl set [倍率] [歩数] [コールバック]  # 100歩の間エンカウント率を2倍にセットし、効果終了時にコモンイベント1番を起動。
@@ -138,8 +160,27 @@ var utakata = utakata || {};
             this._showTrace = false;
             this._tr = null;
 
+            /**
+             * セーブ・ロード時に効果を維持するか。
+             * @type {boolean}
+             */
+            this._remainSaveAndLoad = false;
+
             this._initialize();
         }
+
+        // Like class variables
+        /**
+         * プラグインのバージョン。
+         * @type {string}
+         */
+        EncounterControl.prototype.VERSION = "1.1.0";
+
+        /**
+         * セーブデータに格納する際の名前空間。
+         * @type {string}
+         */
+        EncounterControl.prototype.SAVE_CONTENTS_NAMESPACE = "UTA_EncounterControl";
 
         /**
          * 初期化処理。
@@ -150,6 +191,10 @@ var utakata = utakata || {};
         EncounterControl.prototype._initialize = function() {
             var parameters = PluginManager.parameters("UTA_EncounterControl");
 
+            /**
+             * Show Trace
+             * トレース表示の設定
+             */
             this._showTrace = (String(parameters["Show Trace"]) === "true");
 
             this._tr = function(s) {
@@ -159,6 +204,12 @@ var utakata = utakata || {};
                 var logStr = "EncounterControl: " + s;
                 console.log(logStr);
             };
+
+            /**
+             * Remain Save and Load
+             * セーブ・ロード時に効果を維持するか
+             */
+            this._remainSaveAndLoad = (String(parameters["Remain Save and Load"]) === "true");
 
             this.clearParameter();
         };
@@ -272,6 +323,80 @@ var utakata = utakata || {};
         };
 
         /**
+         * セーブデータ格納データを作成する。
+         * @memberof EncounterControl
+         * @private
+         * @method
+         * @return {object} セーブデータ格納データ。
+         */
+        EncounterControl.prototype._makeSaveContents = function() {
+            var contents = {
+                "version": this.VERSION,
+                "progress": this.progressValue,
+                "remainingStep": this.remainingStepCnt,
+                "callbackCommonEventId": this._callbackCommonEventId,
+            };
+            return contents;
+        };
+
+        /**
+         * セーブ格納データにエンカウント制御のデータを追加する。
+         * @param {object} contents セーブデータに格納するデータ連想配列。
+         * @return {object} セーブデータに格納するデータ連想配列。
+         */
+        EncounterControl.prototype.appendSaveContents = function(contents) {
+            if (!utakata.EncounterControl.isRemainSaveAndLoad()) {
+                return;
+            }
+
+            // 名前空間が存在しない場合は作成する
+            if (!Object.keys(contents).includes("utakata")) {
+                contents.utakata = {};
+            }
+
+            // エンカウント制御のセーブデータを格納する
+            var encounterContents = utakata.EncounterControl._makeSaveContents();
+            contents.utakata[utakata.EncounterControl.SAVE_CONTENTS_NAMESPACE] = encounterContents;
+
+            return contents;
+        };
+
+        /**
+         * セーブデータからデータを読み込み復元する。
+         * @param {object} contents セーブデータから読み込んだデータ。
+         */
+        EncounterControl.prototype.extractSaveContents = function(contents) {
+            if (!this._remainSaveAndLoad) {
+                return;
+            }
+
+            // セーブデータにエンカウント制御のデータが含まれている場合は復元する
+            if (Object.keys(contents).includes("utakata")) {
+                var utakataContents = contents.utakata;
+
+                if (Object.keys(utakataContents).includes(this.SAVE_CONTENTS_NAMESPACE)) {
+                    try {
+                        var encounterContents = utakataContents[this.SAVE_CONTENTS_NAMESPACE];
+
+                        var version = encounterContents.version;
+                        var progress = encounterContents.progress;
+                        var remainingStep = encounterContents.remainingStep;
+                        var callbackCommonEventId = encounterContents.callbackCommonEventId;
+
+                        // 読み込んだデータを基に状態を復元する
+                        this._setParameterCore(progress, remainingStep, callbackCommonEventId);
+
+                        this._tr("extractSaveContents: version = " + version + ", progress = " + progress + ", remainingStep = " + remainingStep + ", callbackCommonEventId = " + callbackCommonEventId);
+                    } catch (e) {
+                        // 読み込みに失敗した場合はロードせずに何もしない
+                        console.error("EncounterControl.extractSaveContents: Failed to load data from savedata.");
+                        console.error(e);
+                    }
+                }
+            }
+        };
+
+        /**
          * エンカウント補正中かどうかを取得する。
          * @memberof EncounterControl
          * @method
@@ -300,6 +425,16 @@ var utakata = utakata || {};
          */
         EncounterControl.prototype.getRemainingStepCount = function() {
             return this.remainingStepCnt;
+        };
+
+        /**
+         * セーブ・ロード時に効果を維持するかを取得する。
+         * @memberof EncounterControl
+         * @method
+         * @return {boolean} 効果を維持する場合はtrue。
+         */
+        EncounterControl.prototype.isRemainSaveAndLoad = function() {
+            return this._remainSaveAndLoad;
         };
 
         return EncounterControl;
@@ -353,6 +488,25 @@ var utakata = utakata || {};
             value *= utakata.EncounterControl.getProgressValue();
         }
         return value;
+    };
+
+    //-----------------------------------------------------------------------------
+    // DataManager
+    //-----------------------------------------------------------------------------
+    // セーブデータの作成時にエンカウント制御のデータを追加する
+    var _DataManager_makeSaveContents = DataManager.makeSaveContents;
+    DataManager.makeSaveContents = function() {
+        var contents = _DataManager_makeSaveContents.call(this);
+
+        utakata.EncounterControl.appendSaveContents(contents);
+        return contents;
+    };
+
+    // セーブデータの展開時にエンカウント制御のデータを復元する
+    var _DataManager_extractSaveContents = DataManager.extractSaveContents;
+    DataManager.extractSaveContents = function(contents) {
+        _DataManager_extractSaveContents.call(this, contents);
+        utakata.EncounterControl.extractSaveContents(contents);
     };
 
 })(utakata);
