@@ -131,6 +131,10 @@ var utakata = utakata || {};
              */
             this._callbackCommonEventId = null;
 
+            /**
+             * トレース表示を有効にするか。
+             * @type {boolean}
+             */
             this._showTrace = false;
             this._tr = null;
 
@@ -274,6 +278,7 @@ var utakata = utakata || {};
          * @return {boolean} エンカウント補正中の場合はtrue。
          */
         EncounterControl.prototype.isEnabled = function() {
+            // -1の場合は永続的に補正がかかる
             return this.remainingStepCnt != 0;
         };
 
