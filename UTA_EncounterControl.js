@@ -158,7 +158,6 @@ var utakata = utakata || {};
              * @type {boolean}
              */
             this._showTrace = false;
-            this._tr = null;
 
             /**
              * セーブ・ロード時に効果を維持するか。
@@ -197,14 +196,6 @@ var utakata = utakata || {};
              */
             this._showTrace = (String(parameters["Show Trace"]) === "true");
 
-            this._tr = function(s) {
-                if (!this._showTrace) {
-                    return;
-                }
-                var logStr = "EncounterControl: " + s;
-                console.log(logStr);
-            };
-
             /**
              * Remain Save and Load
              * セーブ・ロード時に効果を維持するか
@@ -212,6 +203,18 @@ var utakata = utakata || {};
             this._remainSaveAndLoad = (String(parameters["Remain Save and Load"]) === "true");
 
             this.clearParameter();
+        };
+
+        /**
+         * デバッグトレースの出力。
+         * @param {string} message メッセージ文字列。
+         */
+        EncounterControl.prototype._tr = function(message) {
+            if (!this._showTrace) {
+                return;
+            }
+            var logStr = "EncounterControl: " + message;
+            console.log(logStr);
         };
 
         /**
