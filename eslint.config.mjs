@@ -58,7 +58,12 @@ export default [
         }
       ],
       // インデントのスペース数
-      "@stylistic/js/indent": ["error", 4],
+      "@stylistic/js/indent": [
+        "error", 4,
+        {
+          "SwitchCase": 1,
+        }
+      ],
       // ifなどのキーワードの前後にスペースを入れる
       "@stylistic/js/keyword-spacing": [
         "error",

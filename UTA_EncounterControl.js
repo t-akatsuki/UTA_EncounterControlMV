@@ -455,14 +455,14 @@ var utakata = utakata || {};
         _Game_Interpreter_pluginCommand.call(this, command, args);
         if (command === "EncounterControl") {
             switch (args[0]) {
-            case "set":
-                utakata.EncounterControl.setParameter(args);
-                break;
-            case "clear":
-                utakata.EncounterControl.clearParameter();
-                break;
-            default:
-                break;
+                case "set":
+                    utakata.EncounterControl.setParameter(args);
+                    break;
+                case "clear":
+                    utakata.EncounterControl.clearParameter();
+                    break;
+                default:
+                    break;
             }
         }
     };
