@@ -626,7 +626,6 @@ var utakata = utakata || {};
     var DataManager_setupNewGame = DataManager.setupNewGame;
     DataManager.setupNewGame = function() {
         DataManager_setupNewGame.call(this);
-
         utakata.EncounterControl.clearParameter();
     };
 
