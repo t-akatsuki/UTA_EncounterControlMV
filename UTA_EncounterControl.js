@@ -43,6 +43,14 @@
  * # Plugin Command
  *   EncounterControl set [magnification] [steps] [callback]
  *                                     # This script set to Encounter rate twice between 100 step.
+ * 
+ *   EncounterControl get <target> <variable-id>
+ *      Get current encounter control value into the variablee with the specified number.
+ *      Specify one of following for <target>.
+ *        rate      : Current encountor corrected value(100x value)
+ *        remainstep: Current encounter control's remain steps.(0 when non effedted)
+ *        callback  : Current end callback common event id.(0 if not set)
+ * 
  *   EncounterControl clear            # state of control encounter.
  *                                     # callback function is not called on clear timing.
  * 
@@ -99,6 +107,14 @@
  * 
  * ■プラグインコマンド
  *   EncounterControl set [倍率] [歩数] [コールバック]  # 100歩の間エンカウント率を2倍にセットし、効果終了時にコモンイベント1番を起動。
+ * 
+ *   EncounterControl get <対象> <変数番号>
+ *      指定した番号の変数に現在のエンカウント補正状態を取得します。
+ *      <対象>には以下の何れかを指定します。
+ *        rate      : 現在のエンカウント補正値(実際の100倍値が返ります)
+ *        remainstep: 現在のエンカウント補正残り歩数。(補正無しの場合は0が返ります)
+ *        callback  : 現在の効果終了コールバックコモンイベントID。(指定していない場合は0が返ります)
+ * 
  *   EncounterControl clear                             # エンカウント制御の状態をクリアします。
  *                                                      # クリア時にはコールバックは呼ばれません。
  * 
