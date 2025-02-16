@@ -424,6 +424,77 @@ var utakata = utakata || {};
         };
 
         /**
+         * プラグインコマンドgetの実処理。
+         * 指定した変数に現在の対象パラメーター値を格納する。
+         * @memberof EncounterControl
+         * @private
+         * @method
+         * @param {string} target 取得対象。以下のどれか。
+         *          rate      : 現在のエンカウント補正率(100倍値)
+         *          remainstep: 現在のエンカウント補正残り歩数。
+         *          callback  : 現在のコールバックコモンイベントID。
+         * @param {number} variableId 結果を格納する変数の番号。
+         */
+        EncounterControl.prototype._getCore = function(target, variableId) {
+            // 指定した変数IDが範囲外の場合はエラーとする
+            if (variableId <= 0 || variableId > $dataSystem.variables.length - 1) {
+                throw new RangeError("utakata.EncounterControl: Invalid argument. Variable id is out of range.");
+            }
+
+            // 取得対象を変数に格納する
+            switch (target) {
+                case "rate":
+                    // ツクールの変数は整数前提の為100倍値を返す
+                    var correctedRate = Math.floor(this._rate * 100);
+                    $gameVariables.setValue(variableId, correctedRate);
+                    break;
+                case "remainstep":
+                    $gameVariables.setValue(variableId, this._remainStep);
+                    break;
+                case "callback":
+                    $gameVariables.setValue(variableId, this._callbackCommonEventId || 0);
+                    break;
+                default:
+                    // 取得対象が不正な場合はエラー
+                    throw new Error("utakata.EncounterControl: Invalid argument in get plugin command. type is invalid.");
+            }
+        };
+
+        /**
+         * プラグインコマンドget処理。
+         * @memberof EncounterControl
+         * @method
+         * @param {string[]} args プラグインコマンド引数。
+         *      args[1]: 取得対象。
+         *      args[2]: 取得した値を格納する変数の番号。
+         */
+        EncounterControl.prototype.get = function(args) {
+            var target = "";
+            var variableId = 0;
+
+            // プラグインコマンド引数が不正な場合はエラーとする
+            try {
+                target = args.length >= 2 ? args[1] : "";
+                target = target.toLowerCase();
+
+                if (args.length < 3) {
+                    throw new Error("utakata.EncounterControl: Invalid argument in get plugin command. variable id is required.");
+                }
+
+                variableId = parseInt(args[2], 10);
+                if (variableId !== variableId) {
+                    throw new TypeError("utakata.EncounterControl: Invalid argument in get plugin command. variable id is invalid.");
+                }
+
+                this._getCore(target, variableId);
+            } catch (e) {
+                console.error("EncounterControl.extractSaveContents.get: Ditect invalid arguments. (" + JSON.stringify(args) + ")");
+                console.error(e);
+                throw e;
+            }
+        };
+
+        /**
          * エンカウント補正中かどうかを取得する。
          * @memberof EncounterControl
          * @method
@@ -479,6 +550,9 @@ var utakata = utakata || {};
             switch (args[0]) {
                 case "set":
                     utakata.EncounterControl.setParameter(args);
+                    break;
+                case "get":
+                    utakata.EncounterControl.get(args);
                     break;
                 case "clear":
                     utakata.EncounterControl.clearParameter();
