@@ -351,7 +351,7 @@ var utakata = utakata || {};
             }
 
             // 名前空間が存在しない場合は作成する
-            if (!Object.keys(contents).includes("utakata")) {
+            if (!Object.keys(contents).indexOf("utakata") < 0) {
                 contents.utakata = {};
             }
 
@@ -376,10 +376,10 @@ var utakata = utakata || {};
             }
 
             // セーブデータにエンカウント制御のデータが含まれている場合は復元する
-            if (Object.keys(contents).includes("utakata")) {
+            if (Object.keys(contents).indexOf("utakata") >= 0) {
                 var utakataContents = contents.utakata;
 
-                if (Object.keys(utakataContents).includes(this.SAVE_CONTENTS_NAMESPACE)) {
+                if (Object.keys(utakataContents).indexOf(this.SAVE_CONTENTS_NAMESPACE) >= 0) {
                     try {
                         var encounterContents = utakataContents[this.SAVE_CONTENTS_NAMESPACE];
 
