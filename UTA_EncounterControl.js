@@ -43,6 +43,14 @@
  * # Plugin Command
  *   EncounterControl set [magnification] [steps] [callback]
  *                                     # This script set to Encounter rate twice between 100 step.
+ * 
+ *   EncounterControl get <target> <variable-id>
+ *      Get current encounter control value into the variablee with the specified number.
+ *      Specify one of following for <target>.
+ *        rate      : Current encountor corrected value(100x value)
+ *        remainstep: Current encounter control's remain steps.(0 when non effedted)
+ *        callback  : Current end callback common event id.(0 if not set)
+ * 
  *   EncounterControl clear            # state of control encounter.
  *                                     # callback function is not called on clear timing.
  * 
@@ -99,6 +107,14 @@
  * 
  * ■プラグインコマンド
  *   EncounterControl set [倍率] [歩数] [コールバック]  # 100歩の間エンカウント率を2倍にセットし、効果終了時にコモンイベント1番を起動。
+ * 
+ *   EncounterControl get <対象> <変数番号>
+ *      指定した番号の変数に現在のエンカウント補正状態を取得します。
+ *      <対象>には以下の何れかを指定します。
+ *        rate      : 現在のエンカウント補正値(実際の100倍値が返ります)
+ *        remainstep: 現在のエンカウント補正残り歩数。(補正無しの場合は0が返ります)
+ *        callback  : 現在の効果終了コールバックコモンイベントID。(指定していない場合は0が返ります)
+ * 
  *   EncounterControl clear                             # エンカウント制御の状態をクリアします。
  *                                                      # クリア時にはコールバックは呼ばれません。
  * 
@@ -141,12 +157,12 @@ var utakata = utakata || {};
              * エンカウント率の倍率。
              * @type {number}
              */
-            this.progressValue = 1.0;
+            this._rate = 1.0;
             /**
              * 効果の残り歩数。
              * @type {number}
              */
-            this.remainingStepCnt = 0;
+            this._remainStep = 0;
             /**
              * コールバック時に呼ばれるコモンイベントID。
              * @type {number|null}
@@ -158,7 +174,6 @@ var utakata = utakata || {};
              * @type {boolean}
              */
             this._showTrace = false;
-            this._tr = null;
 
             /**
              * セーブ・ロード時に効果を維持するか。
@@ -197,14 +212,6 @@ var utakata = utakata || {};
              */
             this._showTrace = (String(parameters["Show Trace"]) === "true");
 
-            this._tr = function(s) {
-                if (!this._showTrace) {
-                    return;
-                }
-                var logStr = "EncounterControl: " + s;
-                console.log(logStr);
-            };
-
             /**
              * Remain Save and Load
              * セーブ・ロード時に効果を維持するか
@@ -212,6 +219,18 @@ var utakata = utakata || {};
             this._remainSaveAndLoad = (String(parameters["Remain Save and Load"]) === "true");
 
             this.clearParameter();
+        };
+
+        /**
+         * デバッグトレースの出力。
+         * @param {string} message メッセージ文字列。
+         */
+        EncounterControl.prototype._tr = function(message) {
+            if (!this._showTrace) {
+                return;
+            }
+            var logStr = "EncounterControl: " + message;
+            console.log(logStr);
         };
 
         /**
@@ -231,9 +250,9 @@ var utakata = utakata || {};
             }
 
             // エンカウント補正倍率
-            var progress = parseFloat(args[1]);
-            if (progress !== progress) {
-                throw new Error("utakata.EncounterControl: Plugin command argument progress is invalid.");
+            var rate = parseFloat(args[1]);
+            if (rate !== rate) {
+                throw new Error("utakata.EncounterControl: Plugin command argument rate is invalid.");
             }
             // 効果歩数
             var step = parseInt(args[2], 10);
@@ -250,7 +269,7 @@ var utakata = utakata || {};
                 }
             }
 
-            this._setParameterCore(progress, step, endCallbackCommonEventId);
+            this._setParameterCore(rate, step, endCallbackCommonEventId);
             return true;
         };
 
@@ -258,21 +277,21 @@ var utakata = utakata || {};
          * @memberof EncounterControl
          * @private
          * @method
-         * @param {number} progress エンカウント補正倍率
+         * @param {number} rate エンカウント補正倍率
          * @param {number} step 効果歩数。
          * @param {number|null} endCallbackCommonEventId コールバックコモンイベントID。
          *                                               nullの場合はコールバックは呼ばれない。
          */
-        EncounterControl.prototype._setParameterCore = function(progress, step, endCallbackCommonEventId) {
+        EncounterControl.prototype._setParameterCore = function(rate, step, endCallbackCommonEventId) {
             if (endCallbackCommonEventId === undefined) {
                 endCallbackCommonEventId = null;
             }
 
-            this._tr("setParameter: progress = " + progress + ", step = " + step + ", callbackCommonEventId = " + endCallbackCommonEventId);
+            this._tr("setParameter: rate = " + rate + ", step = " + step + ", callbackCommonEventId = " + endCallbackCommonEventId);
 
             // エンカウント補正率は小数点2桁までの精度とする
-            this.progressValue = Math.floor(progress * 100) / 100;
-            this.remainingStepCnt = Math.floor(step);
+            this._rate = Math.floor(rate * 100) / 100;
+            this._remainStep = Math.floor(step);
 
             this._callbackCommonEventId = endCallbackCommonEventId;
         };
@@ -284,8 +303,8 @@ var utakata = utakata || {};
          */
         EncounterControl.prototype.clearParameter = function() {
             this._tr("clearParameter");
-            this.progressValue = 1.0;
-            this.remainingStepCnt = 0;
+            this._rate = 1.0;
+            this._remainStep = 0;
             this._callbackCommonEventId = null;
         };
 
@@ -307,12 +326,17 @@ var utakata = utakata || {};
          * @memberof EncounterControl
          * @method
          */
-        EncounterControl.prototype.updateRemainingStepCount = function() {
-            if (this.remainingStepCnt > 0) {
-                this.remainingStepCnt--;
+        EncounterControl.prototype.updateRemainStep = function() {
+            // 補正中で無い場合やイベント中は何もしない
+            if ($gameMap.isEventRunning() || !utakata.EncounterControl.isEnabled()) {
+                return;
+            }
+    
+            if (this._remainStep > 0) {
+                this._remainStep--;
 
                 // 効果終了時の処理
-                if (this.remainingStepCnt == 0) {
+                if (this._remainStep == 0) {
                     // コールバックの呼び出し
                     this._callEndCallback();
 
@@ -320,6 +344,20 @@ var utakata = utakata || {};
                     this.clearParameter();
                 }
             }
+        };
+
+        /**
+         * エンカウント補正をかけた倍率値を取得する。
+         * エンカウント補正中でない場合は補正せずそのままの値を返す。
+         * @param {number} value 元となるエンカウント倍率値。
+         * @return {number} 補正後のエンカウント倍率値。
+         */
+        EncounterControl.prototype.updateEncounterProgressValue = function(value) {
+            // エンカウント補正中でない場合は補正しない
+            if (!utakata.EncounterControl.isEnabled()) {
+                return value;
+            }
+            return value * this.getRateValue();
         };
 
         /**
@@ -332,8 +370,8 @@ var utakata = utakata || {};
         EncounterControl.prototype._makeSaveContents = function() {
             var contents = {
                 "version": this.VERSION,
-                "progress": this.progressValue,
-                "remainingStep": this.remainingStepCnt,
+                "rate": this._rate,
+                "remainStep": this._remainStep,
                 "callbackCommonEventId": this._callbackCommonEventId,
             };
             return contents;
@@ -351,7 +389,7 @@ var utakata = utakata || {};
             }
 
             // 名前空間が存在しない場合は作成する
-            if (!Object.keys(contents).includes("utakata")) {
+            if (!Object.keys(contents).indexOf("utakata") < 0) {
                 contents.utakata = {};
             }
 
@@ -376,28 +414,99 @@ var utakata = utakata || {};
             }
 
             // セーブデータにエンカウント制御のデータが含まれている場合は復元する
-            if (Object.keys(contents).includes("utakata")) {
+            if (Object.keys(contents).indexOf("utakata") >= 0) {
                 var utakataContents = contents.utakata;
 
-                if (Object.keys(utakataContents).includes(this.SAVE_CONTENTS_NAMESPACE)) {
+                if (Object.keys(utakataContents).indexOf(this.SAVE_CONTENTS_NAMESPACE) >= 0) {
                     try {
                         var encounterContents = utakataContents[this.SAVE_CONTENTS_NAMESPACE];
 
                         var version = encounterContents.version;
-                        var progress = encounterContents.progress;
-                        var remainingStep = encounterContents.remainingStep;
+                        var rate = encounterContents.rate;
+                        var remainStep = encounterContents.remainStep;
                         var callbackCommonEventId = encounterContents.callbackCommonEventId;
 
                         // 読み込んだデータを基に状態を復元する
-                        this._setParameterCore(progress, remainingStep, callbackCommonEventId);
+                        this._setParameterCore(rate, remainStep, callbackCommonEventId);
 
-                        this._tr("extractSaveContents: version = " + version + ", progress = " + progress + ", remainingStep = " + remainingStep + ", callbackCommonEventId = " + callbackCommonEventId);
+                        this._tr("extractSaveContents: version = " + version + ", rate = " + rate + ", remainStep = " + remainStep + ", callbackCommonEventId = " + callbackCommonEventId);
                     } catch (e) {
                         // 読み込みに失敗した場合はロードせずに何もしない
                         console.error("EncounterControl.extractSaveContents: Failed to load data from savedata.");
                         console.error(e);
                     }
                 }
+            }
+        };
+
+        /**
+         * プラグインコマンドgetの実処理。
+         * 指定した変数に現在の対象パラメーター値を格納する。
+         * @memberof EncounterControl
+         * @private
+         * @method
+         * @param {string} target 取得対象。以下のどれか。
+         *          rate      : 現在のエンカウント補正率(100倍値)
+         *          remainstep: 現在のエンカウント補正残り歩数。
+         *          callback  : 現在のコールバックコモンイベントID。
+         * @param {number} variableId 結果を格納する変数の番号。
+         */
+        EncounterControl.prototype._getCore = function(target, variableId) {
+            // 指定した変数IDが範囲外の場合はエラーとする
+            if (variableId <= 0 || variableId > $dataSystem.variables.length - 1) {
+                throw new RangeError("utakata.EncounterControl: Invalid argument. Variable id is out of range.");
+            }
+
+            // 取得対象を変数に格納する
+            switch (target) {
+                case "rate":
+                    // ツクールの変数は整数前提の為100倍値を返す
+                    var correctedRate = Math.floor(this._rate * 100);
+                    $gameVariables.setValue(variableId, correctedRate);
+                    break;
+                case "remainstep":
+                    $gameVariables.setValue(variableId, this._remainStep);
+                    break;
+                case "callback":
+                    $gameVariables.setValue(variableId, this._callbackCommonEventId || 0);
+                    break;
+                default:
+                    // 取得対象が不正な場合はエラー
+                    throw new Error("utakata.EncounterControl: Invalid argument in get plugin command. type is invalid.");
+            }
+        };
+
+        /**
+         * プラグインコマンドget処理。
+         * @memberof EncounterControl
+         * @method
+         * @param {string[]} args プラグインコマンド引数。
+         *      args[1]: 取得対象。
+         *      args[2]: 取得した値を格納する変数の番号。
+         */
+        EncounterControl.prototype.get = function(args) {
+            var target = "";
+            var variableId = 0;
+
+            // プラグインコマンド引数が不正な場合はエラーとする
+            try {
+                target = args.length >= 2 ? args[1] : "";
+                target = target.toLowerCase();
+
+                if (args.length < 3) {
+                    throw new Error("utakata.EncounterControl: Invalid argument in get plugin command. variable id is required.");
+                }
+
+                variableId = parseInt(args[2], 10);
+                if (variableId !== variableId) {
+                    throw new TypeError("utakata.EncounterControl: Invalid argument in get plugin command. variable id is invalid.");
+                }
+
+                this._getCore(target, variableId);
+            } catch (e) {
+                console.error("EncounterControl.extractSaveContents.get: Ditect invalid arguments. (" + JSON.stringify(args) + ")");
+                console.error(e);
+                throw e;
             }
         };
 
@@ -409,7 +518,7 @@ var utakata = utakata || {};
          */
         EncounterControl.prototype.isEnabled = function() {
             // -1の場合は永続的に補正がかかる
-            return this.remainingStepCnt != 0;
+            return this._remainStep != 0;
         };
 
         /**
@@ -418,8 +527,8 @@ var utakata = utakata || {};
          * @method
          * @return {number} エンカウント補正率。
          */
-        EncounterControl.prototype.getProgressValue = function() {
-            return this.progressValue;
+        EncounterControl.prototype.getRateValue = function() {
+            return this._rate;
         };
 
         /**
@@ -428,8 +537,8 @@ var utakata = utakata || {};
          * @method
          * @return {number} 残り効果歩数。
          */
-        EncounterControl.prototype.getRemainingStepCount = function() {
-            return this.remainingStepCnt;
+        EncounterControl.prototype.getRemainStep = function() {
+            return this._remainStep;
         };
 
         /**
@@ -455,14 +564,17 @@ var utakata = utakata || {};
         _Game_Interpreter_pluginCommand.call(this, command, args);
         if (command === "EncounterControl") {
             switch (args[0]) {
-            case "set":
-                utakata.EncounterControl.setParameter(args);
-                break;
-            case "clear":
-                utakata.EncounterControl.clearParameter();
-                break;
-            default:
-                break;
+                case "set":
+                    utakata.EncounterControl.setParameter(args);
+                    break;
+                case "get":
+                    utakata.EncounterControl.get(args);
+                    break;
+                case "clear":
+                    utakata.EncounterControl.clearParameter();
+                    break;
+                default:
+                    break;
             }
         }
     };
@@ -478,9 +590,7 @@ var utakata = utakata || {};
     var _Game_Party_increaseSteps = Game_Party.prototype.increaseSteps;
     Game_Party.prototype.increaseSteps = function() {
         _Game_Party_increaseSteps.call(this);
-        if (!$gameMap.isEventRunning() && utakata.EncounterControl.isEnabled()) {
-            utakata.EncounterControl.updateRemainingStepCount();
-        }
+        utakata.EncounterControl.updateRemainStep();
     };
 
     //-----------------------------------------------------------------------------
@@ -489,10 +599,8 @@ var utakata = utakata || {};
     var _Game_Player_encounterProgressValue = Game_Player.prototype.encounterProgressValue;
     Game_Player.prototype.encounterProgressValue = function() {
         var value = _Game_Player_encounterProgressValue.call(this);
-        if (utakata.EncounterControl.isEnabled()) {
-            value *= utakata.EncounterControl.getProgressValue();
-        }
-        return value;
+        var correttedValue = utakata.EncounterControl.updateEncounterProgressValue(value);
+        return correttedValue;
     };
 
     //-----------------------------------------------------------------------------
@@ -518,7 +626,6 @@ var utakata = utakata || {};
     var DataManager_setupNewGame = DataManager.setupNewGame;
     DataManager.setupNewGame = function() {
         DataManager_setupNewGame.call(this);
-
         utakata.EncounterControl.clearParameter();
     };
 
