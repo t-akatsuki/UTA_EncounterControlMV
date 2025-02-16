@@ -146,7 +146,7 @@ var utakata = utakata || {};
              * 効果の残り歩数。
              * @type {number}
              */
-            this.remainStepCnt = 0;
+            this._remainStep = 0;
             /**
              * コールバック時に呼ばれるコモンイベントID。
              * @type {number|null}
@@ -272,7 +272,7 @@ var utakata = utakata || {};
 
             // エンカウント補正率は小数点2桁までの精度とする
             this.progressValue = Math.floor(progress * 100) / 100;
-            this.remainStepCnt = Math.floor(step);
+            this._remainStep = Math.floor(step);
 
             this._callbackCommonEventId = endCallbackCommonEventId;
         };
@@ -285,7 +285,7 @@ var utakata = utakata || {};
         EncounterControl.prototype.clearParameter = function() {
             this._tr("clearParameter");
             this.progressValue = 1.0;
-            this.remainStepCnt = 0;
+            this._remainStep = 0;
             this._callbackCommonEventId = null;
         };
 
@@ -308,11 +308,11 @@ var utakata = utakata || {};
          * @method
          */
         EncounterControl.prototype.updateRemainStepCount = function() {
-            if (this.remainStepCnt > 0) {
-                this.remainStepCnt--;
+            if (this._remainStep > 0) {
+                this._remainStep--;
 
                 // 効果終了時の処理
-                if (this.remainStepCnt == 0) {
+                if (this._remainStep == 0) {
                     // コールバックの呼び出し
                     this._callEndCallback();
 
@@ -333,7 +333,7 @@ var utakata = utakata || {};
             var contents = {
                 "version": this.VERSION,
                 "progress": this.progressValue,
-                "remainStep": this.remainStepCnt,
+                "remainStep": this._remainStep,
                 "callbackCommonEventId": this._callbackCommonEventId,
             };
             return contents;
@@ -409,7 +409,7 @@ var utakata = utakata || {};
          */
         EncounterControl.prototype.isEnabled = function() {
             // -1の場合は永続的に補正がかかる
-            return this.remainStepCnt != 0;
+            return this._remainStep != 0;
         };
 
         /**
@@ -429,7 +429,7 @@ var utakata = utakata || {};
          * @return {number} 残り効果歩数。
          */
         EncounterControl.prototype.getRemainStepCount = function() {
-            return this.remainStepCnt;
+            return this._remainStep;
         };
 
         /**
