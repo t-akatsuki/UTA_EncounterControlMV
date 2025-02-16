@@ -141,7 +141,7 @@ var utakata = utakata || {};
              * エンカウント率の倍率。
              * @type {number}
              */
-            this.progressValue = 1.0;
+            this._rate = 1.0;
             /**
              * 効果の残り歩数。
              * @type {number}
@@ -234,9 +234,9 @@ var utakata = utakata || {};
             }
 
             // エンカウント補正倍率
-            var progress = parseFloat(args[1]);
-            if (progress !== progress) {
-                throw new Error("utakata.EncounterControl: Plugin command argument progress is invalid.");
+            var rate = parseFloat(args[1]);
+            if (rate !== rate) {
+                throw new Error("utakata.EncounterControl: Plugin command argument rate is invalid.");
             }
             // 効果歩数
             var step = parseInt(args[2], 10);
@@ -253,7 +253,7 @@ var utakata = utakata || {};
                 }
             }
 
-            this._setParameterCore(progress, step, endCallbackCommonEventId);
+            this._setParameterCore(rate, step, endCallbackCommonEventId);
             return true;
         };
 
@@ -261,20 +261,20 @@ var utakata = utakata || {};
          * @memberof EncounterControl
          * @private
          * @method
-         * @param {number} progress エンカウント補正倍率
+         * @param {number} rate エンカウント補正倍率
          * @param {number} step 効果歩数。
          * @param {number|null} endCallbackCommonEventId コールバックコモンイベントID。
          *                                               nullの場合はコールバックは呼ばれない。
          */
-        EncounterControl.prototype._setParameterCore = function(progress, step, endCallbackCommonEventId) {
+        EncounterControl.prototype._setParameterCore = function(rate, step, endCallbackCommonEventId) {
             if (endCallbackCommonEventId === undefined) {
                 endCallbackCommonEventId = null;
             }
 
-            this._tr("setParameter: progress = " + progress + ", step = " + step + ", callbackCommonEventId = " + endCallbackCommonEventId);
+            this._tr("setParameter: rate = " + rate + ", step = " + step + ", callbackCommonEventId = " + endCallbackCommonEventId);
 
             // エンカウント補正率は小数点2桁までの精度とする
-            this.progressValue = Math.floor(progress * 100) / 100;
+            this._rate = Math.floor(rate * 100) / 100;
             this._remainStep = Math.floor(step);
 
             this._callbackCommonEventId = endCallbackCommonEventId;
@@ -287,7 +287,7 @@ var utakata = utakata || {};
          */
         EncounterControl.prototype.clearParameter = function() {
             this._tr("clearParameter");
-            this.progressValue = 1.0;
+            this._rate = 1.0;
             this._remainStep = 0;
             this._callbackCommonEventId = null;
         };
@@ -335,7 +335,7 @@ var utakata = utakata || {};
         EncounterControl.prototype._makeSaveContents = function() {
             var contents = {
                 "version": this.VERSION,
-                "progress": this.progressValue,
+                "rate": this._rate,
                 "remainStep": this._remainStep,
                 "callbackCommonEventId": this._callbackCommonEventId,
             };
@@ -387,14 +387,14 @@ var utakata = utakata || {};
                         var encounterContents = utakataContents[this.SAVE_CONTENTS_NAMESPACE];
 
                         var version = encounterContents.version;
-                        var progress = encounterContents.progress;
+                        var rate = encounterContents.rate;
                         var remainStep = encounterContents.remainStep;
                         var callbackCommonEventId = encounterContents.callbackCommonEventId;
 
                         // 読み込んだデータを基に状態を復元する
-                        this._setParameterCore(progress, remainStep, callbackCommonEventId);
+                        this._setParameterCore(rate, remainStep, callbackCommonEventId);
 
-                        this._tr("extractSaveContents: version = " + version + ", progress = " + progress + ", remainStep = " + remainStep + ", callbackCommonEventId = " + callbackCommonEventId);
+                        this._tr("extractSaveContents: version = " + version + ", rate = " + rate + ", remainStep = " + remainStep + ", callbackCommonEventId = " + callbackCommonEventId);
                     } catch (e) {
                         // 読み込みに失敗した場合はロードせずに何もしない
                         console.error("EncounterControl.extractSaveContents: Failed to load data from savedata.");
@@ -421,8 +421,8 @@ var utakata = utakata || {};
          * @method
          * @return {number} エンカウント補正率。
          */
-        EncounterControl.prototype.getProgressValue = function() {
-            return this.progressValue;
+        EncounterControl.prototype.getRateValue = function() {
+            return this._rate;
         };
 
         /**
