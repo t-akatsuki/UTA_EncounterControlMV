@@ -310,7 +310,12 @@ var utakata = utakata || {};
          * @memberof EncounterControl
          * @method
          */
-        EncounterControl.prototype.updateRemainStepCount = function() {
+        EncounterControl.prototype.updateRemainStep = function() {
+            // 補正中で無い場合やイベント中は何もしない
+            if ($gameMap.isEventRunning() || !utakata.EncounterControl.isEnabled()) {
+                return;
+            }
+    
             if (this._remainStep > 0) {
                 this._remainStep--;
 
@@ -323,6 +328,20 @@ var utakata = utakata || {};
                     this.clearParameter();
                 }
             }
+        };
+
+        /**
+         * エンカウント補正をかけた倍率値を取得する。
+         * エンカウント補正中でない場合は補正せずそのままの値を返す。
+         * @param {number} value 元となるエンカウント倍率値。
+         * @return {number} 補正後のエンカウント倍率値。
+         */
+        EncounterControl.prototype.updateEncounterProgressValue = function(value) {
+            // エンカウント補正中でない場合は補正しない
+            if (!utakata.EncounterControl.isEnabled()) {
+                return value;
+            }
+            return value * this.getRateValue();
         };
 
         /**
@@ -431,7 +450,7 @@ var utakata = utakata || {};
          * @method
          * @return {number} 残り効果歩数。
          */
-        EncounterControl.prototype.getRemainStepCount = function() {
+        EncounterControl.prototype.getRemainStep = function() {
             return this._remainStep;
         };
 
@@ -481,9 +500,7 @@ var utakata = utakata || {};
     var _Game_Party_increaseSteps = Game_Party.prototype.increaseSteps;
     Game_Party.prototype.increaseSteps = function() {
         _Game_Party_increaseSteps.call(this);
-        if (!$gameMap.isEventRunning() && utakata.EncounterControl.isEnabled()) {
-            utakata.EncounterControl.updateRemainStepCount();
-        }
+        utakata.EncounterControl.updateRemainStep();
     };
 
     //-----------------------------------------------------------------------------
@@ -492,10 +509,8 @@ var utakata = utakata || {};
     var _Game_Player_encounterProgressValue = Game_Player.prototype.encounterProgressValue;
     Game_Player.prototype.encounterProgressValue = function() {
         var value = _Game_Player_encounterProgressValue.call(this);
-        if (utakata.EncounterControl.isEnabled()) {
-            value *= utakata.EncounterControl.getProgressValue();
-        }
-        return value;
+        var correttedValue = utakata.EncounterControl.updateEncounterProgressValue(value);
+        return correttedValue;
     };
 
     //-----------------------------------------------------------------------------
