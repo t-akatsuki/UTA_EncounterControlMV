@@ -146,7 +146,7 @@ var utakata = utakata || {};
              * 効果の残り歩数。
              * @type {number}
              */
-            this.remainingStepCnt = 0;
+            this.remainStepCnt = 0;
             /**
              * コールバック時に呼ばれるコモンイベントID。
              * @type {number|null}
@@ -272,7 +272,7 @@ var utakata = utakata || {};
 
             // エンカウント補正率は小数点2桁までの精度とする
             this.progressValue = Math.floor(progress * 100) / 100;
-            this.remainingStepCnt = Math.floor(step);
+            this.remainStepCnt = Math.floor(step);
 
             this._callbackCommonEventId = endCallbackCommonEventId;
         };
@@ -285,7 +285,7 @@ var utakata = utakata || {};
         EncounterControl.prototype.clearParameter = function() {
             this._tr("clearParameter");
             this.progressValue = 1.0;
-            this.remainingStepCnt = 0;
+            this.remainStepCnt = 0;
             this._callbackCommonEventId = null;
         };
 
@@ -307,12 +307,12 @@ var utakata = utakata || {};
          * @memberof EncounterControl
          * @method
          */
-        EncounterControl.prototype.updateRemainingStepCount = function() {
-            if (this.remainingStepCnt > 0) {
-                this.remainingStepCnt--;
+        EncounterControl.prototype.updateRemainStepCount = function() {
+            if (this.remainStepCnt > 0) {
+                this.remainStepCnt--;
 
                 // 効果終了時の処理
-                if (this.remainingStepCnt == 0) {
+                if (this.remainStepCnt == 0) {
                     // コールバックの呼び出し
                     this._callEndCallback();
 
@@ -333,7 +333,7 @@ var utakata = utakata || {};
             var contents = {
                 "version": this.VERSION,
                 "progress": this.progressValue,
-                "remainingStep": this.remainingStepCnt,
+                "remainStep": this.remainStepCnt,
                 "callbackCommonEventId": this._callbackCommonEventId,
             };
             return contents;
@@ -385,13 +385,13 @@ var utakata = utakata || {};
 
                         var version = encounterContents.version;
                         var progress = encounterContents.progress;
-                        var remainingStep = encounterContents.remainingStep;
+                        var remainStep = encounterContents.remainStep;
                         var callbackCommonEventId = encounterContents.callbackCommonEventId;
 
                         // 読み込んだデータを基に状態を復元する
-                        this._setParameterCore(progress, remainingStep, callbackCommonEventId);
+                        this._setParameterCore(progress, remainStep, callbackCommonEventId);
 
-                        this._tr("extractSaveContents: version = " + version + ", progress = " + progress + ", remainingStep = " + remainingStep + ", callbackCommonEventId = " + callbackCommonEventId);
+                        this._tr("extractSaveContents: version = " + version + ", progress = " + progress + ", remainStep = " + remainStep + ", callbackCommonEventId = " + callbackCommonEventId);
                     } catch (e) {
                         // 読み込みに失敗した場合はロードせずに何もしない
                         console.error("EncounterControl.extractSaveContents: Failed to load data from savedata.");
@@ -409,7 +409,7 @@ var utakata = utakata || {};
          */
         EncounterControl.prototype.isEnabled = function() {
             // -1の場合は永続的に補正がかかる
-            return this.remainingStepCnt != 0;
+            return this.remainStepCnt != 0;
         };
 
         /**
@@ -428,8 +428,8 @@ var utakata = utakata || {};
          * @method
          * @return {number} 残り効果歩数。
          */
-        EncounterControl.prototype.getRemainingStepCount = function() {
-            return this.remainingStepCnt;
+        EncounterControl.prototype.getRemainStepCount = function() {
+            return this.remainStepCnt;
         };
 
         /**
@@ -479,7 +479,7 @@ var utakata = utakata || {};
     Game_Party.prototype.increaseSteps = function() {
         _Game_Party_increaseSteps.call(this);
         if (!$gameMap.isEventRunning() && utakata.EncounterControl.isEnabled()) {
-            utakata.EncounterControl.updateRemainingStepCount();
+            utakata.EncounterControl.updateRemainStepCount();
         }
     };
 
