@@ -4,13 +4,15 @@
 
 //=============================================================================
 /*:
- * @plugindesc This plugin control of the encounter number of step.
- * It becomes as it is possible to perfom control at an arbitary timing from the items and skills.
- * @author T.Akatsuki
+ * @plugindesc Control of the encounter rate with plugin command.
+ * It is possible to control at an arbitary timing from the items and skills.
+ * @author t-akatsuki
  * 
  * @param Show Trace
  * @desc Set state traces display.
- * true  : Show trace., false : Don't show trace.
+ * @type boolean
+ * @on Show trace
+ * @off Don't show trace
  * @default false
  * 
  * @param Remain Save and Load
@@ -21,42 +23,111 @@
  * @default false
  * 
  * @help # Overview
- * When you run this plugin command canbe done to control encounter at any time.
- * For example, encounter rate can be set to half between 100 steps.
- * You can run at any time from common events and map events.
- * Moreover, it is possible to duplicate class abilites that are provided by default of RPG Maker MV.
+ * UTA_EncounterControl plugin allows you to control the number of 
+ * encounter steps from plugin commands.
+ * 
+ * This plugin's feature is that it can be excuted at any timing from 
+ * common events or map events.
+ * 
+ * For example, you can control encounter rate to 1/2 at between 100 steps.
+ * 
+ * Also, it can overlap the effects of class abilities provided by default
+ * in RPG Maker MV.
  * 
  * # Parameters
- *   Show Trace [true|false]
+ *   Show Trace <true|false>
  *     Set whether the issue a trace for debugging.
  * 
- *   Remain Save and Load [true|false]
+ *     - Show trace
+ *         Show trace for debugging.
+ *     - Don't show trace
+ *         Don't Show trace for debugging.
+ * 
+ *   Remain Save and Load <true|false>
  *     Set state of remain effect at save and load.
- *     If you set to true, store state of encounter control on savedata, and restore it when load.
+ * 
+ *     - Enabled
+ *         Store state of encounter control on savedata, 
+ *         and restore it on load.
+ *     - Disabled
+ *         Don't store state of encounter control on savedata.
+ *         Reset state of encounter control on load.
  * 
  * # Plugin Command
- *   EncounterControl set [magnification] [steps] [callback]
- *                                     # This script set to Encounter rate twice between 100 step.
+ *   EncounterControl set <encounter rate> <remain steps> [callback common event id]
+ *     Set the effect of encounter correction.
  * 
- *   EncounterControl get <target> <variable-id>
- *      Get current encounter control value into the variablee with the specified number.
- *      Specify one of following for <target>.
- *        rate      : Current encountor corrected value(100x value)
- *        remainstep: Current encounter control's remain steps.(0 when non effedted)
- *        callback  : Current end callback common event id.(0 if not set)
+ *     <encounter rate> (required): 
+ *       Specify rate of encounter correction.
  * 
- *   EncounterControl clear            # state of control encounter.
- *                                     # callback function is not called on clear timing.
+ *     <remain steps> (required): 
+ *       Specify number of steps for encounter correction until effects off.
+ *       Encounter correction effects not expire depending on the number of steps 
+ *       if you specify -1.
  * 
- * # Example
+ *     [callback common event id] (optional): 
+ *       ID of the common event that is called when encounter correction effects end.
+ *       Don't call common event when encounter correction effects end, 
+ *       if you specify 0 or not specify.
+ * 
+ *   EncounterControl get <target> <variable id>
+ *      Get current encounter control value into the variablee with 
+ *      the specified number.
+ * 
+ *      <target> (required): 
+ *        rate      : Current encountor corrected value.
+ *                    (return 100x value)
+ *        remainstep: Current encounter control's remain steps.
+ *                    (return 0 when not encounter correction)
+ *        callback  : Current end callback common event id.
+ *                    (return 0 if not set)
+ * 
+ *      <variable id> (required): 
+ *        Variable id that stores the target value.
+ * 
+ *   EncounterControl clear
+ *     Clear state of encounter correction.
+ *     Callback is not called on 'clear' timing.
+ * 
+ * # Plugin command examples
  *   EncounterControl set 2.0 100 1
- *    # Between 100 steps, to set encounter rate twice.
- *    # and start no.1 common event after the effect the end.
+ *     Set encounter rate to 2.0x between 100 steps, 
+ *     and call common event 1 when encounter correction effects end.
+ * 
  *   EncounterControl set 0 -1
- *    # Permanently to encounter rate to 0.
+ *     Permanently set encounter rate to 0.
+ *     If you want to clear it, use 'clear' plugin command.
+ * 
+ *   EncounterControl get remainstep 20
+ *     Store Current encounter control's remain steps value to number 20 variable.
+ * 
+ *   EncounterControl clear
+ *     Clear state of encounter correction.
+ * 
+ * # Information
+ *   Version: 1.1.0
+ *   License: MIT License
+ *   Web site:
+ *   - Official Web site:
+ *      https://www.utakata-no-yume.net/
+ *   - Plugin page:
+ *       https://www.utakata-no-yume.net/gallery/plugin/tkmv/encounter_control/
+ *   - Contact:
+ *      https://www.utakata-no-yume.net/contact/rpgmvmz/
+ *   - GitHub repository:
+ *      https://github.com/t-akatsuki/UTA_EncounterControlMV
  * 
  * # Change Log
- *   ver 1.00 (Fed 17, 2016)
+ *   ver 1.1.0 (Feb 22, 2025)
+ *     Implemented measures against competition from other plugins.
+ *     Added settings of whether the effect persists between save and load.
+ *     Added get plugin command.
+ *     Fixed problem where the effect remained when return to title or when game over.
+ *     Add JSDoc comments in code. Enhanced type safety.
+ *     Improved code readability and help document readability.
+ *     Change version number convention to Semantic Versioning 2.0.0.
+ * 
+ *   ver 1.00 (Feb 17, 2016)
  *     Rename to UTA_CommonSave.js.
  *     To be able to set trace in the parameter.
  * 
