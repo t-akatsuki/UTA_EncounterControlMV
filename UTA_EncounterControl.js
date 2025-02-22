@@ -118,7 +118,7 @@
  *      https://github.com/t-akatsuki/UTA_EncounterControlMV
  * 
  * # Change Log
- *   ver 1.1.0 (Feb 22, 2025)
+ *   ver 1.1.0 (Feb 23, 2025)
  *     Implemented measures against competition from other plugins.
  *     Added settings of whether the effect persists between save and load.
  *     Added get plugin command.
@@ -251,7 +251,7 @@
  *       https://github.com/t-akatsuki/UTA_EncounterControlMV
  * 
  * ■更新履歴
- *   ver 1.1.0 (2025.02.22)
+ *   ver 1.1.0 (2025.02.23)
  *     他プラグインとの競合対策を実施。
  *     セーブ・ロードを挟んだ際に効果を持続するかを設定できるように。
  *     現在の補正値などを取得するgetプラグインコマンドを追加。
