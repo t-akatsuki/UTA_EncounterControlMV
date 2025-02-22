@@ -428,6 +428,12 @@ var utakata = utakata || {};
             this._rate = Math.floor(rate * 100) / 100;
             this._remainStep = Math.floor(step);
 
+            // コールバックが指定されていない場合
+            if (endCallbackCommonEventId === null) {
+                this._callbackCommonEventId = null;
+                return;
+            }
+
             // 存在しないコールバックコモンイベントのIDを指定した場合はコールバック無しとする
             // セーブ・ロード時にコモンイベントが消されてしまった場合に詰んでしまうのを防ぐ
             if (endCallbackCommonEventId >= 1 && endCallbackCommonEventId < $dataCommonEvents.length - 1) {
