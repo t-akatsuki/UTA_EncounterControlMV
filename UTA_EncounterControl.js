@@ -524,7 +524,7 @@ var utakata = utakata || {};
             }
 
             // 名前空間が存在しない場合は作成する
-            if (!Object.keys(contents).indexOf("utakata") < 0) {
+            if (Object.keys(contents).indexOf("utakata") < 0) {
                 contents.utakata = {};
             }
 
