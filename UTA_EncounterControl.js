@@ -428,7 +428,14 @@ var utakata = utakata || {};
             this._rate = Math.floor(rate * 100) / 100;
             this._remainStep = Math.floor(step);
 
-            this._callbackCommonEventId = endCallbackCommonEventId;
+            // 存在しないコールバックコモンイベントのIDを指定した場合はコールバック無しとする
+            // セーブ・ロード時にコモンイベントが消されてしまった場合に詰んでしまうのを防ぐ
+            if (endCallbackCommonEventId >= 1 && endCallbackCommonEventId < $dataCommonEvents.length - 1) {
+                this._callbackCommonEventId = endCallbackCommonEventId;
+            } else {
+                this._callbackCommonEventId = null;
+                console.warn("utakata.EncounterControl: Specified common event ID is out of range. (callbackCommonEventId = " + endCallbackCommonEventId);
+            }
         };
 
         /**
